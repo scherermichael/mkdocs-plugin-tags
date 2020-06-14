@@ -95,7 +95,7 @@ class TagsPlugin(BasePlugin):
             if not e:
                 continue
             if "title" not in e:
-                e["title"] = "Untitled"
+                e["title"] = e["plugin_tags_header"]
             tags = e.get("tags", [])
             if tags is not None:
                 for tag in tags:
@@ -114,13 +114,21 @@ def get_metadata(name, path):
         result = []
         c = 0
         for line in f:
+            # Check for front-matter delimiter
             if line.strip() == "---":
                 c +=1
                 continue
-            if c==2:
-                break
+            # No front-matter delimiter found in first line, abort
+            if c==0:
+                break;
+            # We are in the front-matter, add line to meta data
             if c==1:
                 result.append(line)
+                continue
+            # Top level heading found, store for later use when we build the tags file
+            if line.startswith('# '):
+                result.append('plugin_tags_header: ' + line[2:])
+                break
         return "".join(result)
 
     filename = Path(path) / Path(name)
